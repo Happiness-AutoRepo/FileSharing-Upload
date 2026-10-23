@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>FileSharing — Upload files</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: #152237; background: #f3f6fb; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 40px 16px; }
+    main { max-width: 620px; margin: auto; }
+    .card { background: white; border: 1px solid #dbe3ef; border-radius: 18px; padding: 32px; box-shadow: 0 12px 30px #19305212; }
+    h1 { margin: 0 0 8px; font-size: 1.8rem; }
+    p { color: #546478; line-height: 1.5; }
+    label { display: block; font-size: .95rem; font-weight: 600; margin-top: 24px; }
+    .drop { cursor: pointer; background: #f8faff; border: 2px dashed #8aa6d4; border-radius: 13px; padding: 32px 20px; text-align: center; }
+    .drop.drag { background: #e7f1ff; border-color: #145cc6; }
+    .drop strong { display: block; margin-bottom: 10px; }
+    .drop small { display: block; margin: 10px 0; color: #64748b; }
+    input[type="file"] { max-width: 100%; }
+    input[type="password"] { display: block; width: 100%; padding: 12px; border: 1px solid #bac6d6; border-radius: 9px; font-size: 1rem; margin-top: 8px; }
+    button { width: 100%; margin-top: 24px; padding: 14px 20px; border: none; border-radius: 10px; background: #1657b9; color: white; font-size: 1rem; font-weight: 650; cursor: pointer; }
+    button:disabled { background: #9caabc; cursor: wait; }
+    #selected { font-size: .9rem; color: #546478; margin-top: 10px; }
+    #results { padding-left: 22px; overflow-wrap: anywhere; }
+    #results li { margin-top: 9px; }
+    .ok { color: #087548; }
+    .error { color: #b42318; }
+    .note { font-size: .85rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="card">
+      <h1>Upload files</h1>
+      <p>Send documents to the FileSharing repository. A GitHub account is not required.</p>
+      <form id="uploadForm">
+        <label for="files">Select files</label>
+        <div class="drop" id="drop">
+          <strong>Drag files here or select files below</strong>
+          <input id="files" type="file" multiple required accept=".pdf,.docx,.xlsx,.pptx,.txt,.csv,.png,.jpg,.jpeg">
+          <small>PDF, Office documents, text, CSV, JPG or PNG — up to 5 MB per file.</small>
+        </div>
+        <div id="selected" aria-live="polite">No files selected</div>
+        <label for="password">Upload password</label>
+        <input id="password" type="password" autocomplete="off" required placeholder="Enter the shared upload password">
+        <button id="submit" type="submit">Upload files</button>
+      </form>
+      <p id="notice" role="status" aria-live="polite"></p>
+      <ol id="results" aria-live="polite"></ol>
+      <p class="note">Uploads are stored in a private GitHub repository. This page does not provide access to existing files.</p>
+    </section>
+  </main>
+  <script src="./config.js"></script>
+  <script>
+    "use strict";
+    const picker = document.getElementById("files");
+    const selected = document.getElementById("selected");
+    const drop = document.getElementById("drop");
+    const form = document.getElementById("uploadForm");
+    const button = document.getElementById("submit");
+    const notice = document.getElementById("notice");
+    const results = document.getElementById("results");
+    const maximum = 5 * 1024 * 1024;
+    function describeFiles() {
+      const count = picker.files.length;
+      selected.textContent = count ? count + " file(s) selected" : "No files selected";
+    }
+    picker.addEventListener("change", describeFiles);
+    for (const eventName of ["dragenter", "dragover"]) {
+      drop.addEventListener(eventName, function (e) {
+        e.preventDefault();
+        drop.classList.add("drag");
+      });
+    }
+    for (const eventName of ["dragleave", "drop"]) {
+      drop.addEventListener(eventName, function (e) {
+        e.preventDefault();
+        drop.classList.remove("drag");
+      });
+    }
+    drop.addEventListener("drop", function (e) {
+      if (!e.dataTransfer || !e.dataTransfer.files.length) return;
+      const transfer = new DataTransfer();
+      for (const file of e.dataTransfer.files) transfer.items.add(file);
+      picker.files = transfer.files;
+      describeFiles();
+    });
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      results.replaceChildren();
+      notice.textContent = "";
+      const api = String(window.FILESHARING_API_URL || "").replace(/\/+$/, "");
+      if (!/^https:\/\/[^/]+/.test(api)) {
+        notice.textContent = "Upload service has not been configured by the administrator.";
+        notice.className = "error";
+        return;
+      }
+      const files = Array.from(picker.files);
+      const password = document.getElementById("password").value;
+      if (!files.length || !password) return;
+      button.disabled = true;
+      let completed = 0;
+      try {
+        for (const file of files) {
+          const line = document.createElement("li");
+          line.textContent = file.name + " — ";
+          results.appendChild(line);
+          if (!file.size || file.size > maximum) {
+            line.textContent += "Rejected: file must be between 1 byte and 5 MB.";
+            line.className = "error";
+            continue;
+          }
+          try {
+            const response = await fetch(api + "/upload", {
+              method: "POST",
+              headers: {
+                "Authorization": "Bearer " + password,
+                "Content-Type": "application/octet-stream",
+                "X-Upload-Filename": encodeURIComponent(file.name)
+              },
+              body: file,
+              cache: "no-store"
+            });
+            const data = await response.json();
+            if (!response.ok || !data.ok) throw new Error(data.error || "Upload failed");
+            line.textContent += "Uploaded successfully";
+            line.className = "ok";
+            completed++;
+          } catch (err) {
+            line.textContent += err && err.message ? err.message : "Network or upload error";
+            line.className = "error";
+          }
+        }
+        notice.textContent = completed + " of " + files.length + " files uploaded.";
+        notice.className = completed === files.length ? "ok" : "error";
+        if (completed === files.length) { picker.value = ""; describeFiles(); }
+      } finally {
+        document.getElementById("password").value = "";
+        button.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
