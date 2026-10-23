@@ -1,0 +1,1 @@
+window.FILESHARING_API_URL = "";
