@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; connect-src https://api.github.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+<title>Direct GitHub Upload</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f1f5fb;color:#172339;font-family:system-ui,sans-serif;padding:24px}
+main{max-width:620px;margin:auto;background:#fff;border:1px solid #e0e7f0;border-radius:16px;padding:32px}
+h1{margin:0 0 12px}p{line-height:1.55;color:#475569}label{display:block;margin:24px 0 8px;font-weight:600}
+input[type=password]{padding:12px;width:100%;border-radius:7px;border:1px solid #94a3b8;font-size:1rem}
+input[type=file]{width:100%;padding:22px;border:2px dashed #94a3b8;border-radius:10px;background:#f8faff}
+button{border:0;border-radius:8px;padding:12px 16px;background:#1959bc;color:#fff;cursor:pointer;font-weight:600}
+button.secondary{background:#e7edf7;color:#153c78}
+button:disabled{opacity:.55}nav{display:flex;gap:12px;margin-top:24px;flex-wrap:wrap}
+#result{white-space:pre-wrap;overflow-wrap:anywhere;padding-top:16px}small{color:#64748b}
+</style>
+<script src="./direct.js" defer></script>
+</head><body><main>
+<h1>Direct GitHub Upload</h1>
+<p>Uploads directly to the private <strong>Happiness-AutoRepo/FileSharing</strong> repository via GitHub's API. Use only for authorized uploads.</p>
+<form id="uploadForm">
+<label for="token">Fine-grained GitHub access token</label>
+<input id="token" type="password" required autocomplete="off" spellcheck="false" placeholder="Token for this session only">
+<small>Requires access to FileSharing and Contents: Read and write. This page never stores the token.</small>
+<label for="files">Files (up to 5 MiB each)</label>
+<input id="files" type="file" multiple required accept=".pdf,.docx,.xlsx,.pptx,.txt,.csv,.jpg,.jpeg,.png,.zip">
+<nav><button type="button" class="secondary" id="checkAccess">Test token (read-only)</button><button type="submit" id="uploadButton">Upload selected files</button></nav>
+</form>
+<div id="result" role="status" aria-live="polite"></div>
+<p><small>Files are added to a new monthly folder under <code>uploads/browser-YYYY-MM/</code>. The existing <a href="./">Cloudflare uploader</a> remains available. GitHub login is not required on this page, but a valid repository token is required.</small></p>
+</main></body></html>
