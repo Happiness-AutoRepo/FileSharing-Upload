@@ -2,7 +2,7 @@
 (() => {
   const repo = "Happiness-AutoRepo/FileSharing";
   const max = 5 * 1024 * 1024;
-  const types = new Set(["pdf","docx","xlsx","pptx","txt","csv","jpg","jpeg","png","zip"]);
+  const types = new Set(["pdf","docx","xlsx","pptx","txt","csv","jpg","jpeg","png","zip","java"]);
   const token = document.querySelector("#token");
   const files = document.querySelector("#files");
   const check = document.querySelector("#checkAccess");
