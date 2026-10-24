@@ -23,8 +23,8 @@ button:disabled{opacity:.55}nav{display:flex;gap:12px;margin-top:24px;flex-wrap:
 <label for="token">Fine-grained GitHub access token</label>
 <input id="token" type="password" required autocomplete="off" spellcheck="false" placeholder="Token for this session only">
 <small>Requires access to FileSharing and Contents: Read and write. This page never stores the token.</small>
-<label for="files">Files (up to 5 MiB each)</label>
-<input id="files" type="file" multiple required accept=".pdf,.docx,.xlsx,.pptx,.txt,.csv,.jpg,.jpeg,.png,.zip">
+<label for="files">Files, including .java (up to 5 MiB each)</label>
+<input id="files" type="file" multiple required accept=".pdf,.docx,.xlsx,.pptx,.txt,.csv,.jpg,.jpeg,.png,.zip,.java">
 <nav><button type="button" class="secondary" id="checkAccess">Test token (read-only)</button><button type="submit" id="uploadButton">Upload selected files</button></nav>
 </form>
 <div id="result" role="status" aria-live="polite"></div>
